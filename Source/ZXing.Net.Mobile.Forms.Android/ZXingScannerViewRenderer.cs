@@ -29,9 +29,9 @@ namespace ZXing.Net.Mobile.Forms.Android
             var temp = DateTime.Now;
         }
 
-        ZXingScannerView formsView;
+        protected ZXingScannerView formsView;
 
-        internal ZXingSurfaceView zxingSurface;
+        protected ZXingSurfaceView zxingSurface;
         internal Task<bool> requestPermissionsTask;
 
         protected override async void OnElementChanged(ElementChangedEventArgs<ZXingScannerView> e)
@@ -55,16 +55,16 @@ namespace ZXing.Net.Mobile.Forms.Android
                 var activity = Context as Activity;
 
                 if (activity != null)                
-                    await PermissionsHandler.RequestPermissions (activity);
+                    await ZXing.Net.Mobile.Android.PermissionsHandler.RequestPermissionsAsync (activity);
                 
-                zxingSurface = new ZXingSurfaceView (Xamarin.Forms.Forms.Context as Activity);
+                zxingSurface = new ZXingSurfaceView (Xamarin.Forms.Forms.Context as Activity, formsView.Options);
                 zxingSurface.LayoutParameters = new LayoutParams (LayoutParams.MatchParent, LayoutParams.MatchParent);
 
                 base.SetNativeControl (zxingSurface);
 
                 if (formsView.IsScanning)
-                    await zxingSurface.StartScanningAsync (formsView.RaiseScanResult, formsView.Options);
-                
+                    zxingSurface.StartScanning(formsView.RaiseScanResult, formsView.Options);
+
                 if (!formsView.IsAnalyzing)
                     zxingSurface.PauseAnalysis ();
 
@@ -73,7 +73,7 @@ namespace ZXing.Net.Mobile.Forms.Android
             }
         }
 
-        protected override async void OnElementPropertyChanged (object sender, PropertyChangedEventArgs e)
+        protected override void OnElementPropertyChanged (object sender, PropertyChangedEventArgs e)
         {
             base.OnElementPropertyChanged (sender, e);
 
@@ -86,7 +86,7 @@ namespace ZXing.Net.Mobile.Forms.Android
                 break;
             case nameof (ZXingScannerView.IsScanning):
                 if (formsView.IsScanning)
-                    await zxingSurface.StartScanningAsync (formsView.RaiseScanResult, formsView.Options);
+                    zxingSurface.StartScanning (formsView.RaiseScanResult, formsView.Options);
                 else
                     zxingSurface.StopScanning ();
                 break;
@@ -105,7 +105,7 @@ namespace ZXing.Net.Mobile.Forms.Android
             var y = e.GetY ();
 
             if (zxingSurface != null) {
-                zxingSurface.AutoFocus ();
+                zxingSurface.AutoFocus ((int)x, (int)y);
                 System.Diagnostics.Debug.WriteLine ("Touch: x={0}, y={1}", x, y);
             }
             return base.OnTouchEvent (e);
